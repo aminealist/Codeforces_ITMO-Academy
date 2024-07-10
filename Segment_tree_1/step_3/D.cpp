@@ -26,13 +26,13 @@ struct segtree {
     void init(ll n) {
         size = 1;
         while (size < n) size *= 2;
-        tree.resize(2 * size - 1);
+        tree.assign(2 * size - 1, {0});
     }
 
 
     void add(ll i, ll x, ll lx, ll rx) {
         if (rx - lx == 1) [[unlikely]] {
-            tree[x].sum = 1;
+            tree[x].sum = 1 - tree[x].sum;
         } else [[likely]] {
             ll mx = (lx + rx) >> 1;
             if (i < mx) {
@@ -60,20 +60,27 @@ int main() {
     ll n;
     cin >> n;
     vector<ll> was(n + 1, -1);
-    vector<ll> ans(n + 1);
+    vector<ll> ans(n + 1, 0);
     n *= 2;
     segtree a;
     a.init(n);
-    for (ll i = 0; i < n; i++) {
-        ll el;
-        cin >> el;
-        if (was[el] == -1) {
-            was[el] = i;
-        } else {
-            ans[el] = a.ask(was[el], i, 0, 0, a.size);
-            a.add(was[el], 0, 0, a.size);
-
+    vector<ll> p(n);
+    for (auto &el: p) cin >> el;
+    ll t = 2;
+    while (t--) {
+        for (ll i = n - 1; i >= 0; i--) {
+            ll el = p[i];
+            if (was[el] == -1) {
+                was[el] = i;
+                a.add(i, 0, 0, a.size);
+            } else {
+                a.add(was[el], 0, 0, a.size);
+                ans[el] += a.ask(i, was[el], 0, 0, a.size);
+            }
         }
+        a.init(n);
+        reverse(p.begin(), p.end());
+        was.assign(n / 2 + 1, -1);
     }
     n /= 2;
     for (ll i = 1; i <= n; i++) cout << ans[i] << ' ';
